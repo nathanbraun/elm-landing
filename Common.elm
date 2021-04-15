@@ -1,5 +1,6 @@
 module Common exposing
-    ( gray
+    ( Logo
+    , gray
     , noPadding
     , noto
     , source
@@ -187,8 +188,14 @@ viewImageText caption src desc =
         ]
 
 
-viewLogos : Element msg
-viewLogos =
+type alias Logo =
+    { src : String
+    , desc : String
+    }
+
+
+viewLogos : List Logo -> Element msg
+viewLogos logos =
     column
         [ width fill
         , paddingXY 0 40
@@ -201,10 +208,7 @@ viewLogos =
             [ spacing 20
             , centerX
             ]
-            [ viewMaxImage 40 "images/elm.png" "Elm Logo"
-            , viewMaxImage 40 "images/graphql.png" "GraphQL Logo"
-            , viewMaxImage 40 "images/google.png" "Google Logo"
-            ]
+            (List.map (\{ src, desc } -> viewMaxImage 40 src desc) logos)
         ]
 
 

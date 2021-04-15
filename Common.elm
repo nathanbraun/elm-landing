@@ -89,24 +89,25 @@ viewText style device max text_ =
 
 viewEmail :
     Fonts msg
+    -> String
     -> Device
     -> { model | email : String }
     -> (String -> msg)
     -> Element msg
-viewEmail fonts device model msg =
+viewEmail fonts buttonText device model msg =
     let
         desktopView =
             column [ width fill, paddingXY 0 50, spacing 10 ]
                 [ row [ centerX, spacing 20, width (fill |> maximum 450) ]
                     [ el [ width fill ] (viewLoc fonts.secondary model msg)
-                    , el [ centerX ] (viewButton fonts.main "Try It!")
+                    , el [ centerX ] (viewButton fonts.main buttonText)
                     ]
                 ]
 
         mobileView =
             column [ centerX, spacing 10, width (fill |> maximum 500), paddingXY 0 20 ]
                 [ el [ width fill, paddingXY 10 0 ] (viewLoc fonts.secondary model msg)
-                , el [ centerX, paddingXY 0 0 ] (viewButton fonts.main "Try It!")
+                , el [ centerX, paddingXY 0 0 ] (viewButton fonts.main buttonText)
                 ]
     in
     case ( device.class, device.orientation ) of

@@ -1,4 +1,4 @@
-module Common exposing (render, renderer)
+module Common exposing (gray)
 
 import Element exposing (Color)
 

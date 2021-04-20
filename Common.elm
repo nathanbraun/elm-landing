@@ -15,7 +15,10 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import MailerLite
+import Http
+import Loading exposing (LoaderType(..), defaultConfig, render)
+import MailerLite exposing (MailerLiteResponse)
+import RemoteData exposing (RemoteData(..))
 import Widget
 import Widget.Customize as Customize
 import Widget.Material as Material
@@ -92,24 +95,72 @@ viewEmail :
     Fonts msg
     -> String
     -> Device
-    -> { model | email : String }
+    -> { model | email : String, status : RemoteData Http.Error (Result Http.Error MailerLiteResponse) }
     -> (String -> msg)
     -> msg
     -> Element msg
 viewEmail fonts buttonText device model updateMsg submitMsg =
     let
+        emailInput_ =
+            viewLoc fonts.secondary model updateMsg
+
+        ( button, emailInput ) =
+            case model.status of
+                NotAsked ->
+                    ( viewButton submitMsg
+                        fonts.main
+                        (text buttonText)
+                    , emailInput_
+                    )
+
+                Loading ->
+                    ( viewButton submitMsg
+                        fonts.main
+                        (Loading.render
+                            Circle
+                            -- LoaderType
+                            { defaultConfig | size = 20 }
+                            -- Config
+                            Loading.On
+                            |> Element.html
+                        )
+                    , emailInput_
+                    )
+
+                Success response ->
+                    ( none
+                    , paragraph [ fonts.secondary, Font.center, centerX, width fill ]
+                        [ text "You've successfully signed up with ", text model.email, text "." ]
+                    )
+
+                _ ->
+                    ( viewButton submitMsg
+                        fonts.main
+                        (text buttonText)
+                    , emailInput_
+                    )
+
         desktopView =
             column [ width fill, paddingXY 0 50, spacing 10 ]
                 [ row [ centerX, spacing 20, width (fill |> maximum 450) ]
-                    [ el [ width fill ] (viewLoc fonts.secondary model updateMsg)
-                    , el [ centerX ] (viewButton submitMsg fonts.main buttonText)
+                    [ el [ width fill ]
+                        emailInput
+                    , el [ centerX ]
+                        button
                     ]
                 ]
 
         mobileView =
-            column [ centerX, spacing 10, width (fill |> maximum 500), paddingXY 0 20 ]
-                [ el [ width fill, paddingXY 10 0 ] (viewLoc fonts.secondary model updateMsg)
-                , el [ centerX, paddingXY 0 0 ] (viewButton submitMsg fonts.main buttonText)
+            column
+                [ centerX
+                , spacing 10
+                , width (fill |> maximum 500)
+                , paddingXY 0 20
+                ]
+                [ el [ width fill, paddingXY 10 0 ]
+                    emailInput
+                , el [ centerX, paddingXY 0 0 ]
+                    button
                 ]
     in
     case ( device.class, device.orientation ) of
@@ -144,7 +195,7 @@ viewLoc font model msg =
         }
 
 
-viewButton : msg -> Element.Attribute msg -> String -> Element msg
+viewButton : msg -> Element.Attribute msg -> Element msg -> Element msg
 viewButton msg font label =
     Input.button
         [ centerX ]
@@ -157,8 +208,10 @@ viewButton msg font label =
                 , Background.color (rgb255 52 152 219)
                 , Font.color (rgb255 255 255 255)
                 , font
+                , Font.center
+                , width (px 175)
                 ]
-                (text label)
+                label
         }
 
 

@@ -15,6 +15,7 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import MailerLite
 import Widget
 import Widget.Customize as Customize
 import Widget.Material as Material
@@ -93,21 +94,22 @@ viewEmail :
     -> Device
     -> { model | email : String }
     -> (String -> msg)
+    -> msg
     -> Element msg
-viewEmail fonts buttonText device model msg =
+viewEmail fonts buttonText device model updateMsg submitMsg =
     let
         desktopView =
             column [ width fill, paddingXY 0 50, spacing 10 ]
                 [ row [ centerX, spacing 20, width (fill |> maximum 450) ]
-                    [ el [ width fill ] (viewLoc fonts.secondary model msg)
-                    , el [ centerX ] (viewButton fonts.main buttonText)
+                    [ el [ width fill ] (viewLoc fonts.secondary model updateMsg)
+                    , el [ centerX ] (viewButton submitMsg fonts.main buttonText)
                     ]
                 ]
 
         mobileView =
             column [ centerX, spacing 10, width (fill |> maximum 500), paddingXY 0 20 ]
-                [ el [ width fill, paddingXY 10 0 ] (viewLoc fonts.secondary model msg)
-                , el [ centerX, paddingXY 0 0 ] (viewButton fonts.main buttonText)
+                [ el [ width fill, paddingXY 10 0 ] (viewLoc fonts.secondary model updateMsg)
+                , el [ centerX, paddingXY 0 0 ] (viewButton submitMsg fonts.main buttonText)
                 ]
     in
     case ( device.class, device.orientation ) of
@@ -142,11 +144,11 @@ viewLoc font model msg =
         }
 
 
-viewButton : Element.Attribute msg -> String -> Element msg
-viewButton font label =
+viewButton : msg -> Element.Attribute msg -> String -> Element msg
+viewButton msg font label =
     Input.button
         [ centerX ]
-        { onPress = Nothing
+        { onPress = Just msg
         , label =
             el
                 [ Border.width 1
